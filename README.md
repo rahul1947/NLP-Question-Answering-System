@@ -1,4 +1,4 @@
-## NLP-Question-Answering-System
+## NLP: Question-Answering System
 
 #### Authors: 
 
@@ -17,11 +17,11 @@ _______________________________________________________________________________
 Please refer project [guidelines](https://github.com/rahul1947/NLP-Question-Answering-System/blob/master/01-Problem-Statement/Project_S19_NLP6320.pdf) for the problem statement.
 _______________________________________________________________________________
 
-### HOW TO RUN
+### How To Run:
 
 _______________________________________________________________________________
 
-### Updates
+### Updates:
 
 _______________________________________________________________________________
 
