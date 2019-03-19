@@ -13,11 +13,11 @@ The QA system will process and answer questions on this data.
 2. 20 question and answer pairs for QA system development process.
 
 Deliverables:
-* Input: natural language question
-* Output: 
-  a. Exact answer phrase(s)
-  b. Supporting sentence(s) in Wikipedia document
-  c. Supporting Wikipedia document name(s)
+- Input: natural language question
+- Output: 
+  - Exact answer phrase(s)
+  - Supporting sentence(s) in Wikipedia document
+  - Supporting Wikipedia document name(s)
 
 -------------------------------------------------------------------------------
 
