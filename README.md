@@ -7,10 +7,9 @@ techniques for the WH-type questions. E.g.
 - Where is Apple’s headquarters?
 
 The following data is provided:
-1. 100 Wikipedia articles: 
-The QA system will process and answer questions on this data. 
-
-2. 20 question and answer pairs for QA system development process.
+- 100 Wikipedia articles: 
+  The QA system will process and answer questions on this data. 
+- 20 question and answer pairs for QA system development process.
 
 Deliverables:
 - Input: natural language question
