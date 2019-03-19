@@ -14,7 +14,7 @@ _______________________________________________________________________________
 
 ### Problem Statement: 
 
-Please refer project [guidelines](https://github.com/rahul1947/NLP-Question-Answering-System/blob/master/Project_S19_NLP6320.pdf) for the problem statement.
+Please refer project [guidelines](https://github.com/rahul1947/NLP-Question-Answering-System/blob/master/01-Problem-Statement/Project_S19_NLP6320.pdf) for the problem statement.
 _______________________________________________________________________________
 
 ### HOW TO RUN
