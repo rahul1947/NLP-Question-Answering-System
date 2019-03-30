@@ -1,11 +1,18 @@
-1. Spacy Installation: 
-Reference Link: https://spacy.io/usage
+A. TASK 01:
 
-$ conda install -c conda-forge spacy
+	1. Spacy Installation: 
+		Reference Link: https://spacy.io/usage
 
-To Remove (base) from command prompt (base) rahul:-$
-$ . /home/rahul/anaconda3/etc/profile.d/conda.sh 
-$ conda deactivate
+		$ conda install -c conda-forge spacy
 
-{but could not launch anaconda-navigator}
-so, do not deactivate!
+		To Remove (base) from command prompt (base) rahul:-$
+		$ conda config --set changeps1 False
+
+		{but could not launch anaconda-navigator}
+		so, do not deactivate!
+
+	2. Spacy NLTK Wordnet Installation:
+		Reference Link: https://pypi.org/project/spacy-wordnet/
+
+		$ python -m nltk.downloader wordnet
+		$ python -m nltk.downloader omw
