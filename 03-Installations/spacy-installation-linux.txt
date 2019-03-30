@@ -1,0 +1,11 @@
+1. Spacy Installation: 
+Reference Link: https://spacy.io/usage
+
+$ conda install -c conda-forge spacy
+
+To Remove (base) from command prompt (base) rahul:-$
+$ . /home/rahul/anaconda3/etc/profile.d/conda.sh 
+$ conda deactivate
+
+{but could not launch anaconda-navigator}
+so, do not deactivate!
