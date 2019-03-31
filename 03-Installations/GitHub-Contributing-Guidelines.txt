@@ -1,0 +1,26 @@
+** Pull form your parent branch, usually master: 
+$ git pull origin parent-branch-name 
+
+	** If conflicts arise: 
+
+	$ git stash
+
+	$ git pull origin master (to your own branch)
+
+	$ git stash pop
+
+	** To see changes in the code: 
+	$ git diff 
+
+	** Now go directly to the code and resolve the conflicts.
+
+** Now, you are ready to push your local resolved code to your own branch:  
+$ git add . 
+
+$ git commit -m "..."
+
+$ git push origin your-branch-name
+
+** Go to Browser: Create new pull request, assign it your manager to merge the pull request
+
+** Get your pull request merged!
