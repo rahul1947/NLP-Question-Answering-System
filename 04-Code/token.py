@@ -28,10 +28,6 @@ def lemmatize(doc):
     return lemmas
 
 # Gives Part-Of-Speech tags for each word in corpus.
-#def getPOS(doc):    
-#    posTags = [word.pos_ for word in doc]
-#    return posTags
-
 def getPOS(doc):
     
     # Coarse grained part-of-speech tags
@@ -53,6 +49,7 @@ def synParsing(doc):
     
     return dependC, heads
 
+# Extracting Named Entity feature
 def getNamedEntities(doc):
     
     # Text and label of named entity span
@@ -60,6 +57,8 @@ def getNamedEntities(doc):
     
     return namedEntities
 
+# (unimportant) a functiont to split corpus by newlines '\n' 
+# expected to be added somewhere in the pipeline.
 def newlineSplit(doc):
     start = 0
     isNewline = False
@@ -144,9 +143,5 @@ if __name__ == '__main__':
     #nlp = English()
     #sbd = SentenceSegmenter(nlp.vocab, strategy = newlineSplit)
     #nlp.add_pipe(sbd)    
-    
-    #-------------------------- NEW CHANGES ----------------------------   
-    print("Sunn's changes")
-    
     
 #The-End
