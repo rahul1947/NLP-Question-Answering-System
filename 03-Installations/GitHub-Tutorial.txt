@@ -1,0 +1,24 @@
+git pull origin master (parent branch)
+
+	(if conflicts arise)
+
+	git stash
+
+	git pull origin master (to your own branch)
+
+	git stash pop
+
+	git diff (to see changes in the code)
+
+	(go directly to the code and resolve conflicts)
+
+
+git add . 
+
+git commit -m "..."
+
+git push origin rahul
+
+(Browser: create new pull request and assign your manager to merge the pull request)
+
+(get your pull request merged!)
