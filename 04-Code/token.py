@@ -28,10 +28,19 @@ def lemmatize(doc):
     return lemmas
 
 # Gives Part-Of-Speech tags for each word in corpus.
+#def getPOS(doc):    
+#    posTags = [word.pos_ for word in doc]
+#    return posTags
+
 def getPOS(doc):
     
-    posTags = [word.pos_ for word in doc]
-    return posTags
+    # Coarse grained part-of-speech tags
+    pos = [word.pos_ for word in doc]
+    
+    # Fine grained part-of-speech tags
+    tag = [word.tag for word in doc]
+    
+    return pos, tag
 
 # Provides Syntactic Dependencies 
 def synParsing(doc):
@@ -51,6 +60,22 @@ def getNamedEntities(doc):
     
     return namedEntities
 
+def newlineSplit(doc):
+    start = 0
+    isNewline = False
+    
+    for word in doc:
+        
+        if (isNewline and not word.is_space):
+            yield doc[start:word.i]
+            start = word.i
+            isNewline = False
+        elif (word.text == '\n'):
+            isNewline = True
+        if (start < len(doc)):
+            yield doc[start:len(doc)]
+    #endFor
+
 
 # Main function
 if __name__ == '__main__':
@@ -67,8 +92,11 @@ if __name__ == '__main__':
     lemmas = lemmatize(doc)
     #print(lemmas)
     
-    posTags = getPOS(doc)
+    #posTags = getPOS(doc)
     #print(posTags)
+    pos, tags = getPOS(doc)
+    #print(pos)
+    #print(tags)
     
     dependC, heads = synParsing(doc)
     #print(dependC)
@@ -82,38 +110,40 @@ if __name__ == '__main__':
     #nltk.download('wordnet')
     
     nlp.add_pipe(WordnetAnnotator(nlp.lang), after='tagger')
-    
-    
     #token = nlp('assassination')
     #print(type(tokens))        
     #print(token._.wordnet.synsets())
 
     for t in tokens:        
         token = nlp(t)[0]
+        print(token._.wordnet.hypernyms())
+        
         synsets = token._.wordnet.synsets()
         #print(t , " ", synsets)
         for syn in synsets:
             hypernyms = syn.hypernyms()
-            print(syn , " hypernyms ", hypernyms)
+            #print(syn , " hypernyms ", hypernyms)
             
             hyponyms = syn.hyponyms()
-            print(syn , " hyponyms ", hyponyms)
+            #print(syn , " hyponyms ", hyponyms)
             
             partMeronyms = syn.part_meronyms()
-            print(syn , " part meronyms ", partMeronyms)
+            #print(syn , " part meronyms ", partMeronyms)
 
             substanceMeronyms = syn.substance_meronyms()
-            print(syn , " substance meronyms ", substanceMeronyms)
+            #print(syn , " substance meronyms ", substanceMeronyms)
 
             memberHolonyms = syn.member_holonyms()
-            print(syn , " member holonyms ", memberHolonyms)
+            #print(syn , " member holonyms ", memberHolonyms)
             
-            
-    
     # wordnet object link spacy token with nltk wordnet interface by giving acces to
     # synsets and lemmas 
         
-    
+    # SENTENCE SEGMENTATION
+    # REFERENCE: https://www.youtube.com/watch?v=WbEKxcsO66U
+    #nlp = English()
+    #sbd = SentenceSegmenter(nlp.vocab, strategy = newlineSplit)
+    #nlp.add_pipe(sbd)    
     
     
     
