@@ -30,8 +30,8 @@ def lemmatize(doc):
 # Gives Part-Of-Speech tags for each word in corpus.
 def getPOS(doc):
     
-    pos_tags = [word.pos_ for word in doc]
-    return pos_tags
+    posTags = [word.pos_ for word in doc]
+    return posTags
 
 # Provides Syntactic Dependencies 
 def synParsing(doc):
@@ -59,20 +59,73 @@ if __name__ == '__main__':
     corpus = read_data(filepath)
     nlp = spacy.load("en_core_web_sm")
     doc = nlp(corpus)
-    
     #print(corpus)
+    
     tokens = tokennize(doc)
     #print(tokens)
+   
     lemmas = lemmatize(doc)
     #print(lemmas)
-    pos_tags = getPOS(doc)
-    #print(pos_tags)
+    
+    posTags = getPOS(doc)
+    #print(posTags)
     
     dependC, heads = synParsing(doc)
     #print(dependC)
     #print(heads)
     
     namedEntity = getNamedEntities(doc)
-    print(namedEntity)
+    #print(namedEntity)
+    
+    from spacy_wordnet.wordnet_annotator import WordnetAnnotator 
+    #import nltk
+    #nltk.download('wordnet')
+    
+    nlp.add_pipe(WordnetAnnotator(nlp.lang), after='tagger')
+    
+    
+    #token = nlp('assassination')
+    #print(type(tokens))        
+    #print(token._.wordnet.synsets())
+
+    for t in tokens:        
+        token = nlp(t)[0]
+        synsets = token._.wordnet.synsets()
+        #print(t , " ", synsets)
+        for syn in synsets:
+            hypernyms = syn.hypernyms()
+            print(syn , " hypernyms ", hypernyms)
+            
+            hyponyms = syn.hyponyms()
+            print(syn , " hyponyms ", hyponyms)
+            
+            partMeronyms = syn.part_meronyms()
+            print(syn , " part meronyms ", partMeronyms)
+
+            substanceMeronyms = syn.substance_meronyms()
+            print(syn , " substance meronyms ", substanceMeronyms)
+
+            memberHolonyms = syn.member_holonyms()
+            print(syn , " member holonyms ", memberHolonyms)
+            
+            
+    
+    # wordnet object link spacy token with nltk wordnet interface by giving acces to
+    # synsets and lemmas 
+        
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
 #The-End
