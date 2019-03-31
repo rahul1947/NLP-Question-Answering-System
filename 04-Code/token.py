@@ -145,17 +145,6 @@ if __name__ == '__main__':
     #sbd = SentenceSegmenter(nlp.vocab, strategy = newlineSplit)
     #nlp.add_pipe(sbd)    
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+   
     
 #The-End

@@ -14,5 +14,10 @@ A. TASK 01:
 	2. Spacy NLTK Wordnet Installation:
 		Reference Link: https://pypi.org/project/spacy-wordnet/
 
+		Install NLTK wordnet data:
 		$ python -m nltk.downloader wordnet
 		$ python -m nltk.downloader omw
+
+		Install spacy-wordnet:
+		$ pip install spacy-wordnet
+
