@@ -34,7 +34,7 @@ def getPOS(doc):
     pos = [word.pos_ for word in doc]
     
     # Fine grained part-of-speech tags
-    tag = [word.tag for word in doc]
+    tag = [word.tag_ for word in doc]
     
     return pos, tag
 
@@ -104,6 +104,7 @@ if __name__ == '__main__':
     namedEntity = getNamedEntities(doc)
     #print(namedEntity)
     
+    
     from spacy_wordnet.wordnet_annotator import WordnetAnnotator 
     #import nltk
     #nltk.download('wordnet')
@@ -115,7 +116,7 @@ if __name__ == '__main__':
 
     for t in tokens:        
         token = nlp(t)[0]
-        print(token._.wordnet.hypernyms())
+        #print(token._.wordnet.hypernyms())
         
         synsets = token._.wordnet.synsets()
         #print(t , " ", synsets)
@@ -135,6 +136,7 @@ if __name__ == '__main__':
             memberHolonyms = syn.member_holonyms()
             #print(syn , " member holonyms ", memberHolonyms)
             
+    
     # wordnet object link spacy token with nltk wordnet interface by giving acces to
     # synsets and lemmas 
         
@@ -143,5 +145,7 @@ if __name__ == '__main__':
     #nlp = English()
     #sbd = SentenceSegmenter(nlp.vocab, strategy = newlineSplit)
     #nlp.add_pipe(sbd)    
+    
+    print("Rahul Nalawade")
     
 #The-End
