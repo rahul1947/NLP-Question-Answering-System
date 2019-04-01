@@ -21,3 +21,11 @@ A. TASK 01:
 		Install spacy-wordnet:
 		$ pip install spacy-wordnet
 
+		NOTE: 
+		- make sure your pip, python (default), conda has proper python version
+		directed. 
+		- if needed do: $ sudo apt autoremove
+		- cross check by importing spacy and nltk in python console.
+		- if needed, update the conda: $ conda update conda
+		- if needed, install spacy using pip: $ sudo pip install -U spacy
+		- use sudo before 'pip' while installing
