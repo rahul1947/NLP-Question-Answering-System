@@ -16,10 +16,14 @@ def read_data(filepath):
 
 # Creates an array of tokens for the given corpus.
 def tokennize(doc):
-    
-    #[token.text for token in doc]
+
     tokens = [word.text for word in doc]
     return tokens
+
+def sentenceTokennize(doc):
+    
+    sentences = [sent.string.strip() for sent in doc.sents]
+    return sentences
 
 # Lemmatizes corpus to extract lemmas as features
 def lemmatize(doc):
@@ -34,7 +38,7 @@ def getPOS(doc):
     pos = [word.pos_ for word in doc]
     
     # Fine grained part-of-speech tags
-    tag = [word.tag for word in doc]
+    tag = [word.tag_ for word in doc]
     
     return pos, tag
 
@@ -57,24 +61,6 @@ def getNamedEntities(doc):
     
     return namedEntities
 
-# (unimportant) a functiont to split corpus by newlines '\n' 
-# expected to be added somewhere in the pipeline.
-def newlineSplit(doc):
-    start = 0
-    isNewline = False
-    
-    for word in doc:
-        
-        if (isNewline and not word.is_space):
-            yield doc[start:word.i]
-            start = word.i
-            isNewline = False
-        elif (word.text == '\n'):
-            isNewline = True
-        if (start < len(doc)):
-            yield doc[start:len(doc)]
-    #endFor
-
 
 # Main function
 if __name__ == '__main__':
@@ -88,6 +74,9 @@ if __name__ == '__main__':
     tokens = tokennize(doc)
     #print(tokens)
    
+    sentences = sentenceTokennize(doc)
+    #print(sentences)
+    
     lemmas = lemmatize(doc)
     #print(lemmas)
     
@@ -113,35 +102,102 @@ if __name__ == '__main__':
     #print(type(tokens))        
     #print(token._.wordnet.synsets())
 
+    synsetsMap = dict()
+    hypernymsMap = dict()
+    hyponymsMap = dict()
+    partMeronymsMap = dict()
+    substanceMeronymsMap = dict()
+    holonymsMap = dict()
+    
+    #Traverse every token and extract synsets and create dictionaries 
     for t in tokens:        
         token = nlp(t)[0]
-        print(token._.wordnet.hypernyms())
+        #print(token._.wordnet.hypernyms())
         
         synsets = token._.wordnet.synsets()
         #print(t , " ", synsets)
         for syn in synsets:
+            
+            #Creating map for synonyms
+            if not t in synsetsMap:
+                synsetsMap[t] = set()
+                synsetsMap[t].add(syn)
+            else:
+                synsetsMap[t].add(syn)
+            #print("Synsets Map ", synsetsMap)
+            
             hypernyms = syn.hypernyms()
             #print(syn , " hypernyms ", hypernyms)
+            
+            for hyper in hypernyms:
+                #Creating map for hypernyms
+                if not t in hypernymsMap:
+                    hypernymsMap[t] = set()
+                    hypernymsMap[t].add(hyper)
+                else:
+                    hypernymsMap[t].add(hyper)
+            #print("Hypernyms Map ", hypernymsMap)
             
             hyponyms = syn.hyponyms()
             #print(syn , " hyponyms ", hyponyms)
             
+            for hypo in hyponyms:
+                #Creating map for hyponyms
+                if not t in hyponymsMap:
+                    hyponymsMap[t] = set()
+                    hyponymsMap[t].add(hypo)
+                else:
+                    hyponymsMap[t].add(hypo)
+            #print("Hyponyms Map ", hyponymsMap)
+            
             partMeronyms = syn.part_meronyms()
             #print(syn , " part meronyms ", partMeronyms)
+            
+            for partMero in partMeronyms:
+                #Creating map for partMeronyms
+                if not t in partMeronymsMap:
+                    partMeronymsMap[t] = set()
+                    partMeronymsMap[t].add(partMero)
+                else:
+                    partMeronymsMap[t].add(partMero)
+            #print("partMeronyms Map ", partMeronymsMap)
+            
 
             substanceMeronyms = syn.substance_meronyms()
             #print(syn , " substance meronyms ", substanceMeronyms)
 
-            memberHolonyms = syn.member_holonyms()
-            #print(syn , " member holonyms ", memberHolonyms)
-            
-    # wordnet object link spacy token with nltk wordnet interface by giving acces to
-    # synsets and lemmas 
+            for substanceMero in substanceMeronyms:
+                #Creating map for partMeronyms
+                if not t in substanceMeronymsMap:
+                    substanceMeronymsMap[t] = set()
+                    substanceMeronymsMap[t].add(substanceMero)
+                else:
+                    substanceMeronymsMap[t].add(substanceMero)
+            #print("substanceMeronyms Map ", substanceMeronymsMap)
+
+            holonyms = syn.member_holonyms()
+            #print(syn , " member holonyms ", holonyms)
+
+            for holo in holonyms:
+                #Creating map for partMeronyms
+                if not t in holonymsMap:
+                    holonymsMap[t] = set()
+                    holonymsMap[t].add(holo)
+                else:
+                    holonymsMap[t].add(holo)
+            #print("substanceMeronyms Map ", substanceMeronymsMap)
+
+    #print(synsetsMap)
+    #print(hypernymsMap)
+    #print(hyponymsMap)
+    #print(partMeronymsMap)
+    #print(substanceMeronymsMap)
+    #print(holonymsMap)
         
-    # SENTENCE SEGMENTATION
-    # REFERENCE: https://www.youtube.com/watch?v=WbEKxcsO66U
-    #nlp = English()
-    #sbd = SentenceSegmenter(nlp.vocab, strategy = newlineSplit)
-    #nlp.add_pipe(sbd)    
+    
+    
+        
+    
+            
     
 #The-End
