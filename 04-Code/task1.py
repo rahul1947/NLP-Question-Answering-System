@@ -7,10 +7,17 @@ Created on Fri Mar 29 20:45:43 2019
          Sunny Bangale
 """
 import spacy
+import sys
+from GenerateTFIDF import computeTF
+from GenerateTFIDF import computeIDF
+from GenerateTFIDF import computeTFIDF
+
+import os
+
 
 # Reads data from the given file directed as in filepath, and returns it.
 def read_data(filepath):
-    f = open(filepath, 'r')
+    f = open(filepath, 'r', encoding="utf8")
     corpus = f.read()
     return corpus
 
@@ -62,14 +69,243 @@ def getNamedEntities(doc):
     return namedEntities
 
 
+#Building a trie............................................
+'''
+class Node:
+    PhraseId = -1
+    #Dictionary<String, Node>
+    Children = dict()
+    
+        
+    def Node(id):
+        PhraseId = id
+
+
+
+def addPhrase(root, phrase, phraseId):
+
+    # a pointer to traverse the trie without damaging the original reference
+    node = Node()
+    node = root
+
+    # break phrase into words
+    words = phrase.split();
+    #print(words)
+    
+    # start traversal at root
+    for i in range(0, len(words)):
+        
+        # if the current word does not exist as a child to current node, add it
+        if (words[i] not in node.Children):
+            node.Children[words[i]] = Node()
+            #print("sarckha sarkha")
+            #print(node.Children)
+        else:    
+            # move traversal pointer to current word
+            node = node.Children[words[i]];
+            #print("kadhi kadhi")
+
+        # if current word is the last one, mark it with phrase Id
+        if i == (len(words) - 1):
+            node.PhraseId = phraseId;
+            #print("ikde pan ala bagh")
+            #print(node.Children)
+            #print()
+
+
+def findPhrases(root, textBody):
+    # a pointer to traverse the trie without damaging the original reference
+    node = Node()
+    node = root
+    #print(node.PhraseId)
+    
+    # a list of found ids
+    foundPhrases = []
+
+    # break text body into words
+    words = textBody.split();
+    print(words)
+    
+   # starting traversal at trie root and first word in text body
+    i = 0
+    while i < len(words):
+        
+        # if current node has current word as a child move both node and words pointer forward
+        if (words[i] in node.Children):
+            print("ithe ")
+            #print("finding ",words[i],  " in ", node.Children)
+            # move trie pointer forward
+            node = node.Children[words[i]]
+            
+            # move words pointer forward
+            i = i + 1
+        else:
+            print("ata ithe")
+            # current node does not have current word in its children
+            # if there is a phrase Id, then the previous sequence of words matched a phrase, add Id to found list
+            if (node.PhraseId != -1):
+                foundPhrases.append(node.PhraseId)
+
+            if (node == root):
+                # if trie pointer is already at root, increment words pointer
+                i = i + 1
+            else:
+                # if not, leave words pointer at current word and return trie pointer to root
+                node = root
+            
+    # one case remains, word pointer as reached the end and the loop is over but the trie pointer is pointing to a phrase Id
+    #print(node.PhraseId)
+    if (node.PhraseId != -1):
+        foundPhrases.append(node.PhraseId)
+        
+    print("Candidate sentences ")    
+    print(foundPhrases)
+
+#...........................................................................
+'''
+
+def findCandidateSentences(question, sentences):
+    
+    questionTokens = tokennize(nlp(question))
+    candidateSentences = []
+    
+    for questionToken in questionTokens:
+        for sentence in sentences:
+            
+            if questionToken in sentence:
+                    candidateSentences.append(sentence)
+                    
+    
+    return candidateSentences                
+        
+
+def generateTFIDF():
+
+    nlp = spacy.load("en_core_web_sm")
+
+    wikipediaArticles = os.listdir("../02-Project-Data/WikipediaArticles/")
+    print(wikipediaArticles)
+
+    wordSets = set()    
+        
+    for article in wikipediaArticles:
+        filepath = '../02-Project-Data/WikipediaArticles/'+article
+        print('Now Reading File...............',article)        
+        corpus = read_data(filepath)
+        doc = nlp(corpus)
+        #print(doc)        
+        tokens = tokennize(doc)                
+        wordSets = wordSets.union(set(tokens))
+
+        
+    # Generatting TF IDF
+    articlesDict = list()
+    articlesTFDict = list()
+    articlesTFIDFDict = list()
+        
+    for article in wikipediaArticles:
+        filepath = '../02-Project-Data/WikipediaArticles/'+article
+        print('Now Processing File...............',article)        
+        corpus = read_data(filepath)
+        doc = nlp(corpus)
+        #print(doc)        
+        tokens = tokennize(doc)
+                        
+        wordDict = dict()
+        TFDict = dict()
+        TFIDFDict = dict()
+        
+        wordDict = dict.fromkeys(wordSets, 0)        
+        for token in tokens:
+            wordDict[token] += 1
+        #print('................',len(wordDict),'...................')
+        
+        #creating list of dictionaries of word counts of every article    
+        articlesDict.append(wordDict)
+        
+        #creating list of dictionaries of TF of every article    
+        TFDict = computeTF(wordDict, tokens)
+        articlesTFDict.append(TFDict)
+        
+        idfs = computeIDF(articlesDict)        
+        
+        TFIDFDict = computeTFIDF(TFDict, idfs)
+        #print("TFIDFDict ",TFIDFDict)
+        print("...................")
+        articlesTFIDFDict.append(TFIDFDict)    
+        
+    print(articlesTFIDFDict)
+    
+    return articlesTFIDFDict, wikipediaArticles
+
+    '''
+    #printing list of dictionaries
+    for i in range(0,len(articlesDict)):
+        print('At index', i)    
+        print(articlesDict[i])
+        print()
+    '''
+    
+def findBestArticle(articlesTFIDFDict, question, wikipediaArticles):
+    
+    questionTokens = tokennize(nlp(question))
+    questionDict = dict()
+    scoreDict = dict()
+    
+    articleId = 0
+    maxScore = 0
+    for token in questionTokens:
+        print("Checking token ", token)
+        articleId = 0
+        maxScore = -sys.maxsize -1
+        #maxScore = sys.maxsize
+        
+        for article in articlesTFIDFDict:
+            if token in article:
+                score = article[token]
+                print("In article ", articleId, " name ",  wikipediaArticles[articleId], "score ", score, " for token ", token)
+                
+                if score > maxScore:
+                #if score < maxScore:
+                     maxScore = score
+                     scoreDict[token] = articleId
+                articleId += 1
+    
+    #print(scoreDict)     
+    
+    for score in scoreDict:
+        print(wikipediaArticles[scoreDict[score]])
+        
+    
+
+
 # Main function
 if __name__ == '__main__':
 
+    nlp = spacy.load("en_core_web_sm")
+    
+    #Process question    
+    question = "Who shot Abraham Lincoln ?"
+    #question = "Who founded Apple Inc."
+    
+    
+    dependC, heads = synParsing(nlp(question))
+    namedEntityQuestion = getNamedEntities(nlp(question))
+    
+    #Compute TFIDF and find the best article
+    articlesTFIDFDict, wikipediaArticles = generateTFIDF()
+    bestArticle = findBestArticle(articlesTFIDFDict, question, wikipediaArticles)    
+    
+
+    '''
+    #AbrahamLincoln
     filepath = '../02-Project-Data/WikipediaArticles/AbrahamLincoln.txt'    
     corpus = read_data(filepath)
-    nlp = spacy.load("en_core_web_sm")
     doc = nlp(corpus)
     #print(corpus)
+    
+    
+    #Task 1 processing
     
     tokens = tokennize(doc)
     #print(tokens)
@@ -101,14 +337,50 @@ if __name__ == '__main__':
     #token = nlp('assassination')
     #print(type(tokens))        
     #print(token._.wordnet.synsets())
+    '''
 
+    '''
+    trie = Node()
+    pid = 0
+    for sentence in sentences:
+        #print(sentence)
+        #print(pid)
+        
+        addPhrase(trie, sentence, pid)
+        #print(trie.Children)
+        #print()
+        pid += 1
+    
+    
+    findPhrases(trie, "Book")
+    '''
+
+
+    
+    '''
+    import textacy    
+    text_ext = textacy.extract.subject_verb_object_triples(nlp(question))
+    print(text_ext)
+    '''
+    
+    '''
+    print("Head is ", heads)
+    print("NM is ", namedEntityQuestion)
+    print("NM is ", namedEntityQuestion[0][0])
+    
+    candidateSentences = findCandidateSentences(namedEntityQuestion[0][0], sentences)
+    #print(candidateSentences)
+    '''
+    
+    
+    '''
     synsetsMap = dict()
     hypernymsMap = dict()
     hyponymsMap = dict()
     partMeronymsMap = dict()
     substanceMeronymsMap = dict()
     holonymsMap = dict()
-    
+     
     #Traverse every token and extract synsets and create dictionaries 
     for t in tokens:        
         token = nlp(t)[0]
@@ -186,17 +458,17 @@ if __name__ == '__main__':
                 else:
                     holonymsMap[t].add(holo)
             #print("substanceMeronyms Map ", substanceMeronymsMap)
-
+ 
     #print(synsetsMap)
     #print(hypernymsMap)
     #print(hyponymsMap)
     #print(partMeronymsMap)
     #print(substanceMeronymsMap)
     #print(holonymsMap)
-        
     
-    
-        
+
+    '''    
+
     
             
     
