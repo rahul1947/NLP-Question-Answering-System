@@ -69,6 +69,128 @@ def getNamedEntities(doc):
     return namedEntities
 
 
+def getSynsets(token):
+    
+    synsets = token._.wordnet.synsets()
+        #print(t , " ", synsets)
+    for syn in synsets:
+        #Creating map for synonyms
+        if not t in synsetsMap:
+            synsetsMap[t] = set()
+            synsetsMap[t].add(syn)
+        else:
+            synsetsMap[t].add(syn)
+        #print("Synsets Map ", synsetsMap)
+
+    return synsetsMap            
+
+
+def getHypernyms(token):
+    
+    synsets = token._.wordnet.synsets()
+        #print(t , " ", synsets)
+    for syn in synsets:
+        #Creating map for synonyms
+        hypernyms = syn.hypernyms()
+        #print(syn , " hypernyms ", hypernyms)
+            
+        for hyper in hypernyms:
+            #Creating map for hypernyms
+            if not t in hypernymsMap:
+                hypernymsMap[t] = set()
+                hypernymsMap[t].add(hyper)
+            else:
+                hypernymsMap[t].add(hyper)
+        #print("Hypernyms Map ", hypernymsMap)
+        
+    return hypernymsMap            
+
+
+def getHyponyms(token):
+    
+    synsets = token._.wordnet.synsets()
+        #print(t , " ", synsets)
+    for syn in synsets:
+        #Creating map for synonyms
+        hyponyms = syn.hyponyms()
+        #print(syn , " hyponyms ", hyponyms)
+        
+        for hypo in hyponyms:
+            #Creating map for hyponyms
+            if not t in hyponymsMap:
+                hyponymsMap[t] = set()
+                hyponymsMap[t].add(hypo)
+            else:
+                hyponymsMap[t].add(hypo)
+        #print("Hyponyms Map ", hyponymsMap)
+        
+    return hyponymsMap            
+
+
+def getPartMeronyms(token):
+    
+    synsets = token._.wordnet.synsets()
+        #print(t , " ", synsets)
+    for syn in synsets:
+        #Creating map for synonyms
+        partMeronyms = syn.part_meronyms()
+        #print(syn , " part meronyms ", partMeronyms)
+        
+        for partMero in partMeronyms:
+            #Creating map for partMeronyms
+            if not t in partMeronymsMap:
+                partMeronymsMap[t] = set()
+                partMeronymsMap[t].add(partMero)
+            else:
+                partMeronymsMap[t].add(partMero)
+        #print("partMeronyms Map ", partMeronymsMap)
+        
+    return partMeronymsMap            
+
+
+
+def getSubstanceMeronyms(token):
+    
+    synsets = token._.wordnet.synsets()
+        #print(t , " ", synsets)
+    for syn in synsets:
+        #Creating map for synonyms
+        substanceMeronyms = syn.substance_meronyms()
+        #print(syn , " substance meronyms ", substanceMeronyms)
+
+        for substanceMero in substanceMeronyms:
+            #Creating map for partMeronyms
+            if not t in substanceMeronymsMap:
+                substanceMeronymsMap[t] = set()
+                substanceMeronymsMap[t].add(substanceMero)
+            else:
+                substanceMeronymsMap[t].add(substanceMero)
+        #print("substanceMeronyms Map ", substanceMeronymsMap)
+        
+    return substanceMeronymsMap            
+
+def getHolonyms(token):
+    
+    synsets = token._.wordnet.synsets()
+        #print(t , " ", synsets)
+    for syn in synsets:
+        #Creating map for synonyms
+        holonyms = syn.member_holonyms()
+        #print(syn , " member holonyms ", holonyms)
+
+        for holo in holonyms:
+            #Creating map for holonyms
+            if not t in holonymsMap:
+                holonymsMap[t] = set()
+                holonymsMap[t].add(holo)
+            else:
+                holonymsMap[t].add(holo)
+        #print("substanceMeronyms Map ", substanceMeronymsMap)
+        
+    return holonymsMap            
+
+
+
 #Building a trie............................................
 '''
 class Node:
@@ -288,18 +410,18 @@ if __name__ == '__main__':
     question = "Who shot Abraham Lincoln ?"
     #question = "Who founded Apple Inc."
     
-    
+    '''
     dependC, heads = synParsing(nlp(question))
     namedEntityQuestion = getNamedEntities(nlp(question))
     
     #Compute TFIDF and find the best article
     articlesTFIDFDict, wikipediaArticles = generateTFIDF()
     bestArticle = findBestArticle(articlesTFIDFDict, question, wikipediaArticles)    
-    
-
     '''
+
+    
     #AbrahamLincoln
-    filepath = '../02-Project-Data/WikipediaArticles/AbrahamLincoln.txt'    
+    filepath = '../02-Project-Data/WikipediaArticles/A.txt'    
     corpus = read_data(filepath)
     doc = nlp(corpus)
     #print(corpus)
@@ -316,8 +438,6 @@ if __name__ == '__main__':
     lemmas = lemmatize(doc)
     #print(lemmas)
     
-    #posTags = getPOS(doc)
-    #print(posTags)
     pos, tags = getPOS(doc)
     #print(pos)
     #print(tags)
@@ -335,10 +455,8 @@ if __name__ == '__main__':
     
     nlp.add_pipe(WordnetAnnotator(nlp.lang), after='tagger')
     #token = nlp('assassination')
-    #print(type(tokens))        
-    #print(token._.wordnet.synsets())
-    '''
-
+    
+    
     '''
     trie = Node()
     pid = 0
@@ -356,13 +474,7 @@ if __name__ == '__main__':
     '''
 
 
-    
-    '''
-    import textacy    
-    text_ext = textacy.extract.subject_verb_object_triples(nlp(question))
-    print(text_ext)
-    '''
-    
+        
     '''
     print("Head is ", heads)
     print("NM is ", namedEntityQuestion)
@@ -373,7 +485,6 @@ if __name__ == '__main__':
     '''
     
     
-    '''
     synsetsMap = dict()
     hypernymsMap = dict()
     hyponymsMap = dict()
@@ -386,8 +497,19 @@ if __name__ == '__main__':
         token = nlp(t)[0]
         #print(token._.wordnet.hypernyms())
         
+        #synsetsMap = getSynsets(token)
+        #hypernymsMap = getHypernyms(token)
+        #hyponymsMap = getHyponyms(token)
+        #partMeronymsMap = getPartMeronyms(token)
+        #substanceMeronymsMap = getSubstanceMeronyms(token)
+        holonymsMap = getHolonyms(token)
+        
+        
+        '''
         synsets = token._.wordnet.synsets()
         #print(t , " ", synsets)
+        
+        
         for syn in synsets:
             
             #Creating map for synonyms
@@ -458,16 +580,16 @@ if __name__ == '__main__':
                 else:
                     holonymsMap[t].add(holo)
             #print("substanceMeronyms Map ", substanceMeronymsMap)
- 
-    #print(synsetsMap)
-    #print(hypernymsMap)
-    #print(hyponymsMap)
-    #print(partMeronymsMap)
-    #print(substanceMeronymsMap)
-    #print(holonymsMap)
+        '''
+                
+    print(synsetsMap)
+    print(hypernymsMap)
+    print(hyponymsMap)
+    print(partMeronymsMap)
+    print(substanceMeronymsMap)
+    print(holonymsMap)
     
 
-    '''    
 
     
             
