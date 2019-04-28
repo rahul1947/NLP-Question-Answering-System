@@ -7,12 +7,16 @@ Created on Fri Mar 29 20:45:43 2019
          Sunny Bangale
 """
 import spacy
+from spacy_wordnet.wordnet_annotator import WordnetAnnotator 
+import nltk
 import sys
+import os
+import collections
+
 from GenerateTFIDF import computeTF
 from GenerateTFIDF import computeIDF
 from GenerateTFIDF import computeTFIDF
 
-import os
 
 
 # Reads data from the given file directed as in filepath, and returns it.
@@ -68,7 +72,7 @@ def getNamedEntities(doc):
     
     return namedEntities
 
-
+# Provides Synsets of a token 
 def getSynsets(token):
     
     synsets = token._.wordnet.synsets()
@@ -84,7 +88,7 @@ def getSynsets(token):
 
     return synsetsMap            
 
-
+# Provides Hypernyms of a token 
 def getHypernyms(token):
     
     synsets = token._.wordnet.synsets()
@@ -105,7 +109,7 @@ def getHypernyms(token):
         
     return hypernymsMap            
 
-
+# Provides Hyponyms of a token 
 def getHyponyms(token):
     
     synsets = token._.wordnet.synsets()
@@ -126,7 +130,7 @@ def getHyponyms(token):
         
     return hyponymsMap            
 
-
+# Provides Part Meronyms of a token 
 def getPartMeronyms(token):
     
     synsets = token._.wordnet.synsets()
@@ -148,7 +152,7 @@ def getPartMeronyms(token):
     return partMeronymsMap            
 
 
-
+# Provides Substance Meronyms of a token 
 def getSubstanceMeronyms(token):
     
     synsets = token._.wordnet.synsets()
@@ -169,6 +173,7 @@ def getSubstanceMeronyms(token):
         
     return substanceMeronymsMap            
 
+# Provides Holonyms of a token 
 def getHolonyms(token):
     
     synsets = token._.wordnet.synsets()
@@ -286,6 +291,21 @@ def findPhrases(root, textBody):
 #...........................................................................
 '''
 
+def findTop10CandidateSentences(question, sentences):
+    
+    candidates = collections.Counter()
+    
+    for sentence in sentences:
+        sentenceWords = tokennize(nlp(sentence))
+        wordmatches = set(filter(set(tokennize(nlp(question))).__contains__, sentenceWords))
+        candidates[sentence] = len(wordmatches)
+    #print(dictionary)   
+    #print(candidates.most_common(10))    
+    return candidates.most_common(10)
+    
+    
+    
+    
 def findCandidateSentences(question, sentences):
     
     questionTokens = tokennize(nlp(question))
@@ -297,7 +317,6 @@ def findCandidateSentences(question, sentences):
             if questionToken in sentence:
                     candidateSentences.append(sentence)
                     
-    
     return candidateSentences                
         
 
@@ -421,12 +440,12 @@ if __name__ == '__main__':
 
     
     #AbrahamLincoln
-    filepath = '../02-Project-Data/WikipediaArticles/A.txt'    
+    filepath = '../02-Project-Data/WikipediaArticles/AbrahamLincoln.txt'    
     corpus = read_data(filepath)
     doc = nlp(corpus)
     #print(corpus)
     
-    
+
     #Task 1 processing
     
     tokens = tokennize(doc)
@@ -449,14 +468,9 @@ if __name__ == '__main__':
     namedEntity = getNamedEntities(doc)
     #print(namedEntity)
     
-    from spacy_wordnet.wordnet_annotator import WordnetAnnotator 
-    #import nltk
     #nltk.download('wordnet')
-    
     nlp.add_pipe(WordnetAnnotator(nlp.lang), after='tagger')
-    #token = nlp('assassination')
-    
-    
+
     '''
     trie = Node()
     pid = 0
@@ -472,8 +486,6 @@ if __name__ == '__main__':
     
     findPhrases(trie, "Book")
     '''
-
-
         
     '''
     print("Head is ", heads)
@@ -483,8 +495,11 @@ if __name__ == '__main__':
     candidateSentences = findCandidateSentences(namedEntityQuestion[0][0], sentences)
     #print(candidateSentences)
     '''
-    
-    
+    candidateSentences = findTop10CandidateSentences(question, sentences)
+    print(candidateSentences)
+        
+        
+    '''
     synsetsMap = dict()
     hypernymsMap = dict()
     hyponymsMap = dict()
@@ -497,100 +512,22 @@ if __name__ == '__main__':
         token = nlp(t)[0]
         #print(token._.wordnet.hypernyms())
         
-        #synsetsMap = getSynsets(token)
-        #hypernymsMap = getHypernyms(token)
-        #hyponymsMap = getHyponyms(token)
-        #partMeronymsMap = getPartMeronyms(token)
-        #substanceMeronymsMap = getSubstanceMeronyms(token)
+        synsetsMap = getSynsets(token)
+        hypernymsMap = getHypernyms(token)
+        hyponymsMap = getHyponyms(token)
+        partMeronymsMap = getPartMeronyms(token)
+        substanceMeronymsMap = getSubstanceMeronyms(token)
         holonymsMap = getHolonyms(token)
         
-        
-        '''
-        synsets = token._.wordnet.synsets()
-        #print(t , " ", synsets)
-        
-        
-        for syn in synsets:
-            
-            #Creating map for synonyms
-            if not t in synsetsMap:
-                synsetsMap[t] = set()
-                synsetsMap[t].add(syn)
-            else:
-                synsetsMap[t].add(syn)
-            #print("Synsets Map ", synsetsMap)
-            
-            hypernyms = syn.hypernyms()
-            #print(syn , " hypernyms ", hypernyms)
-            
-            for hyper in hypernyms:
-                #Creating map for hypernyms
-                if not t in hypernymsMap:
-                    hypernymsMap[t] = set()
-                    hypernymsMap[t].add(hyper)
-                else:
-                    hypernymsMap[t].add(hyper)
-            #print("Hypernyms Map ", hypernymsMap)
-            
-            hyponyms = syn.hyponyms()
-            #print(syn , " hyponyms ", hyponyms)
-            
-            for hypo in hyponyms:
-                #Creating map for hyponyms
-                if not t in hyponymsMap:
-                    hyponymsMap[t] = set()
-                    hyponymsMap[t].add(hypo)
-                else:
-                    hyponymsMap[t].add(hypo)
-            #print("Hyponyms Map ", hyponymsMap)
-            
-            partMeronyms = syn.part_meronyms()
-            #print(syn , " part meronyms ", partMeronyms)
-            
-            for partMero in partMeronyms:
-                #Creating map for partMeronyms
-                if not t in partMeronymsMap:
-                    partMeronymsMap[t] = set()
-                    partMeronymsMap[t].add(partMero)
-                else:
-                    partMeronymsMap[t].add(partMero)
-            #print("partMeronyms Map ", partMeronymsMap)
-            
-
-            substanceMeronyms = syn.substance_meronyms()
-            #print(syn , " substance meronyms ", substanceMeronyms)
-
-            for substanceMero in substanceMeronyms:
-                #Creating map for partMeronyms
-                if not t in substanceMeronymsMap:
-                    substanceMeronymsMap[t] = set()
-                    substanceMeronymsMap[t].add(substanceMero)
-                else:
-                    substanceMeronymsMap[t].add(substanceMero)
-            #print("substanceMeronyms Map ", substanceMeronymsMap)
-
-            holonyms = syn.member_holonyms()
-            #print(syn , " member holonyms ", holonyms)
-
-            for holo in holonyms:
-                #Creating map for partMeronyms
-                if not t in holonymsMap:
-                    holonymsMap[t] = set()
-                    holonymsMap[t].add(holo)
-                else:
-                    holonymsMap[t].add(holo)
-            #print("substanceMeronyms Map ", substanceMeronymsMap)
-        '''
-                
     print(synsetsMap)
     print(hypernymsMap)
     print(hyponymsMap)
     print(partMeronymsMap)
     print(substanceMeronymsMap)
     print(holonymsMap)
-    
+    '''
 
-
+    #add all of these to Solr
     
             
     
