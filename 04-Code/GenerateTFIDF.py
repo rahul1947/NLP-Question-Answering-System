@@ -2,7 +2,7 @@
 """
 Created on Mon Apr 22 23:47:54 2019
 
-@author: Owner
+@author: Sunny Bangale
 """
 import math
 
