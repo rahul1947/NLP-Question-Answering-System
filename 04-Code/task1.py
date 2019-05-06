@@ -12,18 +12,27 @@ import nltk
 import sys
 import os
 import collections
-
+import pandas as pd
+import pysolr
+ 
+'''
 from GenerateTFIDF import computeTF
 from GenerateTFIDF import computeIDF
 from GenerateTFIDF import computeTFIDF
-
+'''
 
 
 # Reads data from the given file directed as in filepath, and returns it.
 def read_data(filepath):
-    f = open(filepath, 'r', encoding="utf8")
+    try:
+        f = open(filepath, 'r', encoding="utf8")
+        
+    except UnicodeDecodeError:
+        f = open(filepath, 'r', encoding="iso-8859-1")
+   
     corpus = f.read()
-    return corpus
+    return corpus     
+        
 
 # Creates an array of tokens for the given corpus.
 def tokennize(doc):
@@ -37,10 +46,11 @@ def sentenceTokennize(doc):
     return sentences
 
 # Lemmatizes corpus to extract lemmas as features
-def lemmatize(doc):
-    
-    lemmas = [word.lemma_ for word in doc]
-    return lemmas
+def lemmatize(token):
+     
+     doc = list(token)   
+     lemmas = [word.lemma_ for word in doc]
+     return lemmas
 
 # Gives Part-Of-Speech tags for each word in corpus.
 def getPOS(doc):
@@ -69,227 +79,158 @@ def getNamedEntities(doc):
     
     # Text and label of named entity span
     namedEntities = [(ent.text, ent.label_) for ent in doc.ents]
-    
     return namedEntities
 
 # Provides Synsets of a token 
 def getSynsets(token):
     
     synsets = token._.wordnet.synsets()
-        #print(t , " ", synsets)
-    for syn in synsets:
-        #Creating map for synonyms
-        if not t in synsetsMap:
-            synsetsMap[t] = set()
-            synsetsMap[t].add(syn)
-        else:
-            synsetsMap[t].add(syn)
-        #print("Synsets Map ", synsetsMap)
-
-    return synsetsMap            
+    return synsets            
 
 # Provides Hypernyms of a token 
 def getHypernyms(token):
     
+    allHypernyms = set()
     synsets = token._.wordnet.synsets()
-        #print(t , " ", synsets)
+    #print(token , " ", synsets)
     for syn in synsets:
-        #Creating map for synonyms
         hypernyms = syn.hypernyms()
-        #print(syn , " hypernyms ", hypernyms)
-            
-        for hyper in hypernyms:
-            #Creating map for hypernyms
-            if not t in hypernymsMap:
-                hypernymsMap[t] = set()
-                hypernymsMap[t].add(hyper)
-            else:
-                hypernymsMap[t].add(hyper)
-        #print("Hypernyms Map ", hypernymsMap)
-        
-    return hypernymsMap            
+        allHypernyms.update(hypernyms)
+
+    return allHypernyms            
 
 # Provides Hyponyms of a token 
 def getHyponyms(token):
     
+    allHyponyms = set()
     synsets = token._.wordnet.synsets()
-        #print(t , " ", synsets)
+    #print(token , " ", synsets)
     for syn in synsets:
-        #Creating map for synonyms
         hyponyms = syn.hyponyms()
-        #print(syn , " hyponyms ", hyponyms)
-        
-        for hypo in hyponyms:
-            #Creating map for hyponyms
-            if not t in hyponymsMap:
-                hyponymsMap[t] = set()
-                hyponymsMap[t].add(hypo)
-            else:
-                hyponymsMap[t].add(hypo)
-        #print("Hyponyms Map ", hyponymsMap)
-        
-    return hyponymsMap            
+        allHyponyms.update(hyponyms)
+
+    return allHyponyms            
+
 
 # Provides Part Meronyms of a token 
 def getPartMeronyms(token):
     
+    allPartMeronyms = set()
     synsets = token._.wordnet.synsets()
-        #print(t , " ", synsets)
+    #print(token , " ", synsets)
     for syn in synsets:
-        #Creating map for synonyms
         partMeronyms = syn.part_meronyms()
-        #print(syn , " part meronyms ", partMeronyms)
-        
-        for partMero in partMeronyms:
-            #Creating map for partMeronyms
-            if not t in partMeronymsMap:
-                partMeronymsMap[t] = set()
-                partMeronymsMap[t].add(partMero)
-            else:
-                partMeronymsMap[t].add(partMero)
-        #print("partMeronyms Map ", partMeronymsMap)
-        
-    return partMeronymsMap            
+        #print(syn , " hyponyms ", hyponyms)
+        allPartMeronyms.update(partMeronyms)
+
+    return allPartMeronyms            
 
 
 # Provides Substance Meronyms of a token 
 def getSubstanceMeronyms(token):
     
+    allSubstanceMeronym = set()
     synsets = token._.wordnet.synsets()
-        #print(t , " ", synsets)
+    #print(token , " ", synsets)
     for syn in synsets:
-        #Creating map for synonyms
-        substanceMeronyms = syn.substance_meronyms()
-        #print(syn , " substance meronyms ", substanceMeronyms)
+        substanceMeronym = syn.substance_meronyms()
+        #print(syn , " hyponyms ", hyponyms)
+        allSubstanceMeronym.update(substanceMeronym)
 
-        for substanceMero in substanceMeronyms:
-            #Creating map for partMeronyms
-            if not t in substanceMeronymsMap:
-                substanceMeronymsMap[t] = set()
-                substanceMeronymsMap[t].add(substanceMero)
-            else:
-                substanceMeronymsMap[t].add(substanceMero)
-        #print("substanceMeronyms Map ", substanceMeronymsMap)
-        
-    return substanceMeronymsMap            
+    return allSubstanceMeronym   
+
 
 # Provides Holonyms of a token 
 def getHolonyms(token):
-    
+
+    allHolonyms = set()
     synsets = token._.wordnet.synsets()
-        #print(t , " ", synsets)
+    #print(token , " ", synsets)
     for syn in synsets:
-        #Creating map for synonyms
         holonyms = syn.member_holonyms()
-        #print(syn , " member holonyms ", holonyms)
+        allHolonyms.update(holonyms)
 
-        for holo in holonyms:
-            #Creating map for holonyms
-            if not t in holonymsMap:
-                holonymsMap[t] = set()
-                holonymsMap[t].add(holo)
-            else:
-                holonymsMap[t].add(holo)
-        #print("substanceMeronyms Map ", substanceMeronymsMap)
-        
-    return holonymsMap            
+    return allHolonyms            
 
 
+# Task 1 deliverables
+def processAllArticles():
+ 
+    nlp = spacy.load("en_core_web_sm")
 
-#Building a trie............................................
-'''
-class Node:
-    PhraseId = -1
-    #Dictionary<String, Node>
-    Children = dict()
+    wikipediaArticles = os.listdir("../02-Project-Data/WikipediaArticles/")
+    #print(wikipediaArticles)
     
-        
-    def Node(id):
-        PhraseId = id
+    #nltk.download('wordnet')
+    nlp.add_pipe(WordnetAnnotator(nlp.lang), after='tagger')
 
-
-
-def addPhrase(root, phrase, phraseId):
-
-    # a pointer to traverse the trie without damaging the original reference
-    node = Node()
-    node = root
-
-    # break phrase into words
-    words = phrase.split();
-    #print(words)
+    dependCMap = dict()
+    headsMap =  dict()
+    namedEntityMap = dict()
+    sentenceMap= dict()
     
-    # start traversal at root
-    for i in range(0, len(words)):
-        
-        # if the current word does not exist as a child to current node, add it
-        if (words[i] not in node.Children):
-            node.Children[words[i]] = Node()
-            #print("sarckha sarkha")
-            #print(node.Children)
-        else:    
-            # move traversal pointer to current word
-            node = node.Children[words[i]];
-            #print("kadhi kadhi")
-
-        # if current word is the last one, mark it with phrase Id
-        if i == (len(words) - 1):
-            node.PhraseId = phraseId;
-            #print("ikde pan ala bagh")
-            #print(node.Children)
-            #print()
-
-
-def findPhrases(root, textBody):
-    # a pointer to traverse the trie without damaging the original reference
-    node = Node()
-    node = root
-    #print(node.PhraseId)
     
-    # a list of found ids
-    foundPhrases = []
+    for article in wikipediaArticles:
+        filepath = '../02-Project-Data/WikipediaArticles/'+article
+        print('Now Reading File...............',article)        
+        corpus = read_data(filepath)
+        doc = nlp(corpus)
+        #print(doc)        
+        tokens = tokennize(doc)                
 
-    # break text body into words
-    words = textBody.split();
-    print(words)
-    
-   # starting traversal at trie root and first word in text body
-    i = 0
-    while i < len(words):
-        
-        # if current node has current word as a child move both node and words pointer forward
-        if (words[i] in node.Children):
-            print("ithe ")
-            #print("finding ",words[i],  " in ", node.Children)
-            # move trie pointer forward
-            node = node.Children[words[i]]
+        lemmasMap = dict()
+        posMap = dict()
+        tagsMap = dict()
+         
+        synsetsMap = dict()
+        hypernymsMap = dict()
+        hyponymsMap = dict()
+        partMeronymsMap = dict()
+        substanceMeronymsMap = dict()
+        holonymsMap = dict()
+         
+        #Traverse every token and extract synsets and create dictionaries 
+        #for t in tokens:        
+            #token = nlp(t)[0]
+            #print(t," ", token)
             
-            # move words pointer forward
-            i = i + 1
-        else:
-            print("ata ithe")
-            # current node does not have current word in its children
-            # if there is a phrase Id, then the previous sequence of words matched a phrase, add Id to found list
-            if (node.PhraseId != -1):
-                foundPhrases.append(node.PhraseId)
-
-            if (node == root):
-                # if trie pointer is already at root, increment words pointer
-                i = i + 1
-            else:
-                # if not, leave words pointer at current word and return trie pointer to root
-                node = root
+        for token in doc:
+            #print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_, token.shape_, token.is_alpha, token.is_stop)     
             
-    # one case remains, word pointer as reached the end and the loop is over but the trie pointer is pointing to a phrase Id
-    #print(node.PhraseId)
-    if (node.PhraseId != -1):
-        foundPhrases.append(node.PhraseId)
+            lemmasMap[token] = token.lemma_
+            posMap[token] = token.pos_
+            tagsMap[token] = token.tag_
+                    
+            synsetsMap[token] = getSynsets(token)
+            hypernymsMap[token] = getHypernyms(token)
+            hyponymsMap[token] = getHyponyms(token)
+            partMeronymsMap[token] = getPartMeronyms(token)
+            substanceMeronymsMap[token] = getSubstanceMeronyms(token)
+            holonymsMap[token] = getHolonyms(token)
+         
+        #print(tokens)    
+        #print(lemmasMap)    
+        #print(posMap)    
+        #print(tagsMap)    
+        #print(synsetsMap)
+        #print(hypernymsMap)
+        #print(hyponymsMap)
+        #print(partMeronymsMap)
+        #print(substanceMeronymsMap)
+        #print(holonymsMap)
         
-    print("Candidate sentences ")    
-    print(foundPhrases)
+        dependCMap[article], headsMap[article] = synParsing(doc)
+        #print(dependCMap)
+        #print(headsMap)
+        
+        namedEntityMap[article] = getNamedEntities(doc)
+        #print(namedEntityMap)
+        
+        sentenceMap[article] = sentenceTokennize(doc)
 
-#...........................................................................
-'''
+    return tokens, lemmasMap, posMap, tagsMap, dependCMap, headsMap, namedEntityMap, synsetsMap, hypernymsMap, hyponymsMap, partMeronymsMap, substanceMeronymsMap, holonymsMap, sentenceMap
+    
+
 
 def findTop10CandidateSentences(question, sentences):
     
@@ -303,9 +244,7 @@ def findTop10CandidateSentences(question, sentences):
     #print(candidates.most_common(10))    
     return candidates.most_common(10)
     
-    
-    
-    
+
 def findCandidateSentences(question, sentences):
     
     questionTokens = tokennize(nlp(question))
@@ -325,7 +264,7 @@ def generateTFIDF():
     nlp = spacy.load("en_core_web_sm")
 
     wikipediaArticles = os.listdir("../02-Project-Data/WikipediaArticles/")
-    print(wikipediaArticles)
+    #print(wikipediaArticles)
 
     wordSets = set()    
         
@@ -379,13 +318,14 @@ def generateTFIDF():
     
     return articlesTFIDFDict, wikipediaArticles
 
-    '''
     #printing list of dictionaries
-    for i in range(0,len(articlesDict)):
-        print('At index', i)    
-        print(articlesDict[i])
-        print()
-    '''
+    #for i in range(0,len(articlesDict)):
+    #    print('At index', i)    
+    #    print(articlesDict[i])
+    #    print()
+    
+    
+    
     
 def findBestArticle(articlesTFIDFDict, question, wikipediaArticles):
     
@@ -404,6 +344,7 @@ def findBestArticle(articlesTFIDFDict, question, wikipediaArticles):
         for article in articlesTFIDFDict:
             if token in article:
                 score = article[token]
+                print(score)
                 print("In article ", articleId, " name ",  wikipediaArticles[articleId], "score ", score, " for token ", token)
                 
                 if score > maxScore:
@@ -414,20 +355,26 @@ def findBestArticle(articlesTFIDFDict, question, wikipediaArticles):
     
     #print(scoreDict)     
     
-    for score in scoreDict:
-        print(wikipediaArticles[scoreDict[score]])
+    #for score in scoreDict:
+        #print(wikipediaArticles[scoreDict[score]])
         
     
-
-
+    
+        
 # Main function
 if __name__ == '__main__':
 
     nlp = spacy.load("en_core_web_sm")
     
+    tokens, lemmasMap, posMap, tagsMap, dependCMap, headsMap, namedEntityMap, synsetsMap, hypernymsMap, hyponymsMap, partMeronymsMap, substanceMeronymsMap, holonymsMap, sentenceMap = processAllArticles()
+    
+    #print(namedEntityMap)
+    
     #Process question    
-    question = "Who shot Abraham Lincoln ?"
+    #question = "Lincoln ?"
     #question = "Who founded Apple Inc."
+    
+    #runSolr()
     
     '''
     dependC, heads = synParsing(nlp(question))
@@ -436,57 +383,14 @@ if __name__ == '__main__':
     #Compute TFIDF and find the best article
     articlesTFIDFDict, wikipediaArticles = generateTFIDF()
     bestArticle = findBestArticle(articlesTFIDFDict, question, wikipediaArticles)    
+    print(bestArticle)
     '''
 
-    
-    #AbrahamLincoln
-    filepath = '../02-Project-Data/WikipediaArticles/AbrahamLincoln.txt'    
-    corpus = read_data(filepath)
-    doc = nlp(corpus)
-    #print(corpus)
-    
+    #Naive way of finding the candidate sentences  
+    #candidateSentences = findTop10CandidateSentences(question, sentences)
+    #print(candidateSentences)
 
-    #Task 1 processing
-    
-    tokens = tokennize(doc)
-    #print(tokens)
-   
-    sentences = sentenceTokennize(doc)
-    #print(sentences)
-    
-    lemmas = lemmatize(doc)
-    #print(lemmas)
-    
-    pos, tags = getPOS(doc)
-    #print(pos)
-    #print(tags)
-    
-    dependC, heads = synParsing(doc)
-    #print(dependC)
-    #print(heads)
-    
-    namedEntity = getNamedEntities(doc)
-    #print(namedEntity)
-    
-    #nltk.download('wordnet')
-    nlp.add_pipe(WordnetAnnotator(nlp.lang), after='tagger')
-
-    '''
-    trie = Node()
-    pid = 0
-    for sentence in sentences:
-        #print(sentence)
-        #print(pid)
-        
-        addPhrase(trie, sentence, pid)
-        #print(trie.Children)
-        #print()
-        pid += 1
-    
-    
-    findPhrases(trie, "Book")
-    '''
-        
+    #Naive way of finding the candidate sentences
     '''
     print("Head is ", heads)
     print("NM is ", namedEntityQuestion)
@@ -494,41 +398,19 @@ if __name__ == '__main__':
     
     candidateSentences = findCandidateSentences(namedEntityQuestion[0][0], sentences)
     #print(candidateSentences)
-    '''
-    candidateSentences = findTop10CandidateSentences(question, sentences)
-    print(candidateSentences)
-        
-        
-    '''
-    synsetsMap = dict()
-    hypernymsMap = dict()
-    hyponymsMap = dict()
-    partMeronymsMap = dict()
-    substanceMeronymsMap = dict()
-    holonymsMap = dict()
-     
-    #Traverse every token and extract synsets and create dictionaries 
-    for t in tokens:        
-        token = nlp(t)[0]
-        #print(token._.wordnet.hypernyms())
-        
-        synsetsMap = getSynsets(token)
-        hypernymsMap = getHypernyms(token)
-        hyponymsMap = getHyponyms(token)
-        partMeronymsMap = getPartMeronyms(token)
-        substanceMeronymsMap = getSubstanceMeronyms(token)
-        holonymsMap = getHolonyms(token)
-        
-    print(synsetsMap)
-    print(hypernymsMap)
-    print(hyponymsMap)
-    print(partMeronymsMap)
-    print(substanceMeronymsMap)
-    print(holonymsMap)
-    '''
-
-    #add all of these to Solr
     
-            
+    done = True
+    for (sentence, matches) in candidateSentences:
+        
+        if questionType(question) == "PERSON":
+            for (text, label) in getNamedEntities(nlp(sentence)):    
+                if "PERSON" == label:
+                    answer = text
+                    print("Found!!! ", answer)
+                    done = True
+                elif done:
+                    break
+    '''    
+                    
     
 #The-End
