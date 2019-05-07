@@ -8,8 +8,6 @@ Created on Sun May  5 01:53:39 2019
 import spacy
 from spacy_wordnet.wordnet_annotator import WordnetAnnotator 
 import nltk
-
-import pandas as pd
 import pysolr
 
 from task1 import tokennize
@@ -24,12 +22,10 @@ def runSolr():
     nlp = spacy.load("en_core_web_sm")
     
     #connect to solr Sentence Information core
-    solrSentenceInformation = pysolr.Solr('http://localhost:8983/solr/SentenceInformationCore', always_commit = True, timeout=10)
-    
-    #iso-8859-1
+    solrSentenceInformation = pysolr.Solr('http://localhost:8983/solr/SentenceInformationCore', always_commit = True, timeout=100)
     
     #conect to solr nlp core
-    solrNLPCore = pysolr.Solr('http://localhost:8983/solr/NLPCore', always_commit = True, timeout = 10)
+    solrNLPCore = pysolr.Solr('http://localhost:8983/solr/NLPCore', always_commit = True, timeout = 100)
 
     
     candidateSentences = dict()
@@ -49,10 +45,12 @@ def runSolr():
             namedEntitiesTagSet = set()
             bannedSet = set()
             
-            
+            #AbrahamLincoln.txt_584
             for ent in namedEntitiesList:
+                
                 namedEntitiesWordSet.add(ent[0])
                 namedEntitiesTagSet.add(ent[1])
+                
                 #extra filter on unnecessary tags
                 if(ent[1] == "PERCENT" or ent[1] == "MONEY" or ent[1] == "QUANTITY" or ent[1] == "ORDINAL" or ent[1] == "CARDINAL" ):
                     bannedSet.add(ent[0])
@@ -77,6 +75,10 @@ def runSolr():
             
             #print(namedEntitiesWordSet)
             for word in namedEntitiesWordSet:
+                
+                if word == 'Lincoln': 
+                    word = 'Abraham Lincoln'
+                
                 #filter unncessary words
                 if(word not in bannedSet):                    
                     if word not in candidateSentences:
@@ -87,7 +89,7 @@ def runSolr():
                         sentenceIdList = candidateSentences[word]
                         sentenceIdList.add(coreId)
                         candidateSentences[word] = sentenceIdList
-    
+        
                         
     #print(candidateSentences)                                
 

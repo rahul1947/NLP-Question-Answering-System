@@ -12,9 +12,8 @@ import nltk
 import sys
 import os
 import collections
-import pandas as pd
-import pysolr
- 
+
+
 '''
 from GenerateTFIDF import computeTF
 from GenerateTFIDF import computeIDF
@@ -25,14 +24,11 @@ from GenerateTFIDF import computeTFIDF
 # Reads data from the given file directed as in filepath, and returns it.
 def read_data(filepath):
     try:
-        f = open(filepath, 'r', encoding="utf8")
-        
+        f = open(filepath, 'r', encoding="utf8")    
     except UnicodeDecodeError:
         f = open(filepath, 'r', encoding="iso-8859-1")
-   
     corpus = f.read()
     return corpus     
-        
 
 # Creates an array of tokens for the given corpus.
 def tokennize(doc):
@@ -152,12 +148,39 @@ def getHolonyms(token):
 
     return allHolonyms            
 
+#function to get root of a sentence
+def getRoot(doc):
+    
+    
+    dependC, heads = synParsing(doc)
+    for i in range(0, len(dependC)):
+        if dependC[i] == 'ROOT':
+            root = heads[i] 
+            
+    #root = [token for token in doc if token.head == token][0]
+    return root            
+
+#function to create word POS map
+def getPosWordMap(doc):
+
+    posWordMap = dict()
+    
+    for word in doc:
+        if word.pos_ not in posWordMap:
+            posList = set()
+            posList.add(word.text)
+            posWordMap[word.pos_] = posList
+        else:
+            posList = posWordMap[word.pos_]
+            posList.add(word.text)
+            posWordMap[word.pos_] = posList
+    
+    return posWordMap
 
 # Task 1 deliverables
 def processAllArticles():
  
     nlp = spacy.load("en_core_web_sm")
-
     wikipediaArticles = os.listdir("../02-Project-Data/WikipediaArticles/")
     #print(wikipediaArticles)
     
@@ -169,13 +192,12 @@ def processAllArticles():
     namedEntityMap = dict()
     sentenceMap= dict()
     
-    
+    #process all articles and find the respective 
     for article in wikipediaArticles:
         filepath = '../02-Project-Data/WikipediaArticles/'+article
         print('Now Reading File...............',article)        
         corpus = read_data(filepath)
         doc = nlp(corpus)
-        #print(doc)        
         tokens = tokennize(doc)                
 
         lemmasMap = dict()
@@ -188,12 +210,7 @@ def processAllArticles():
         partMeronymsMap = dict()
         substanceMeronymsMap = dict()
         holonymsMap = dict()
-         
-        #Traverse every token and extract synsets and create dictionaries 
-        #for t in tokens:        
-            #token = nlp(t)[0]
-            #print(t," ", token)
-            
+                     
         for token in doc:
             #print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_, token.shape_, token.is_alpha, token.is_stop)     
             
@@ -240,8 +257,6 @@ def findTop10CandidateSentences(question, sentences):
         sentenceWords = tokennize(nlp(sentence))
         wordmatches = set(filter(set(tokennize(nlp(question))).__contains__, sentenceWords))
         candidates[sentence] = len(wordmatches)
-    #print(dictionary)   
-    #print(candidates.most_common(10))    
     return candidates.most_common(10)
     
 
@@ -262,12 +277,10 @@ def findCandidateSentences(question, sentences):
 def generateTFIDF():
 
     nlp = spacy.load("en_core_web_sm")
-
     wikipediaArticles = os.listdir("../02-Project-Data/WikipediaArticles/")
     #print(wikipediaArticles)
 
     wordSets = set()    
-        
     for article in wikipediaArticles:
         filepath = '../02-Project-Data/WikipediaArticles/'+article
         print('Now Reading File...............',article)        
@@ -314,18 +327,8 @@ def generateTFIDF():
         print("...................")
         articlesTFIDFDict.append(TFIDFDict)    
         
-    print(articlesTFIDFDict)
-    
     return articlesTFIDFDict, wikipediaArticles
-
-    #printing list of dictionaries
-    #for i in range(0,len(articlesDict)):
-    #    print('At index', i)    
-    #    print(articlesDict[i])
-    #    print()
-    
-    
-    
+        
     
 def findBestArticle(articlesTFIDFDict, question, wikipediaArticles):
     
@@ -339,7 +342,6 @@ def findBestArticle(articlesTFIDFDict, question, wikipediaArticles):
         print("Checking token ", token)
         articleId = 0
         maxScore = -sys.maxsize -1
-        #maxScore = sys.maxsize
         
         for article in articlesTFIDFDict:
             if token in article:
@@ -348,17 +350,13 @@ def findBestArticle(articlesTFIDFDict, question, wikipediaArticles):
                 print("In article ", articleId, " name ",  wikipediaArticles[articleId], "score ", score, " for token ", token)
                 
                 if score > maxScore:
-                #if score < maxScore:
                      maxScore = score
                      scoreDict[token] = articleId
                 articleId += 1
-    
     #print(scoreDict)     
     
     #for score in scoreDict:
         #print(wikipediaArticles[scoreDict[score]])
-        
-    
     
         
 # Main function
@@ -366,32 +364,22 @@ if __name__ == '__main__':
 
     nlp = spacy.load("en_core_web_sm")
     
-    tokens, lemmasMap, posMap, tagsMap, dependCMap, headsMap, namedEntityMap, synsetsMap, hypernymsMap, hyponymsMap, partMeronymsMap, substanceMeronymsMap, holonymsMap, sentenceMap = processAllArticles()
+    tokens, lemmasMap, posMap, tagsMap, dependCMap, headsMap, namedEntityMap, synsetsMap, hypernymsMap, hyponymsMap, partMeronymsMap, substanceMeronymsMap, holonymsMap, sentenceMap = processAllArticles()    
     
-    #print(namedEntityMap)
-    
-    #Process question    
-    #question = "Lincoln ?"
-    #question = "Who founded Apple Inc."
-    
-    #runSolr()
     
     '''
-    dependC, heads = synParsing(nlp(question))
-    namedEntityQuestion = getNamedEntities(nlp(question))
-    
     #Compute TFIDF and find the best article
     articlesTFIDFDict, wikipediaArticles = generateTFIDF()
     bestArticle = findBestArticle(articlesTFIDFDict, question, wikipediaArticles)    
     print(bestArticle)
     '''
 
+    '''
     #Naive way of finding the candidate sentences  
     #candidateSentences = findTop10CandidateSentences(question, sentences)
     #print(candidateSentences)
 
     #Naive way of finding the candidate sentences
-    '''
     print("Head is ", heads)
     print("NM is ", namedEntityQuestion)
     print("NM is ", namedEntityQuestion[0][0])
