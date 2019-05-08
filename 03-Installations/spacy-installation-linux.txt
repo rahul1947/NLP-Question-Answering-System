@@ -1,0 +1,31 @@
+A. TASK 01:
+
+	1. Spacy Installation: 
+		Reference Link: https://spacy.io/usage
+
+		$ conda install -c conda-forge spacy
+
+		To Remove (base) from command prompt (base) rahul:-$
+		$ conda config --set changeps1 False
+
+		{but could not launch anaconda-navigator}
+		so, do not deactivate!
+
+	2. Spacy NLTK Wordnet Installation:
+		Reference Link: https://pypi.org/project/spacy-wordnet/
+
+		Install NLTK wordnet data:
+		$ python -m nltk.downloader wordnet
+		$ python -m nltk.downloader omw
+
+		Install spacy-wordnet:
+		$ pip install spacy-wordnet
+
+		NOTE: 
+		- make sure your pip, python (default), conda has proper python version
+		directed. 
+		- if needed do: $ sudo apt autoremove
+		- cross check by importing spacy and nltk in python console.
+		- if needed, update the conda: $ conda update conda
+		- if needed, install spacy using pip: $ sudo pip install -U spacy
+		- use sudo before 'pip' while installing
