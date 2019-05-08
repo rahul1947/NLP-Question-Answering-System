@@ -104,18 +104,6 @@ def searchAnswerInSolr(questionEntitiesList, questionType, questionRoot, questio
             #print(sentence)
             #print(namedEntitiesSet)
             
-            ''''            
-            intersectionNamedEntities = questionType.intersection(namedEntitiesSet)
-            sentenceNamedEntities = getNamedEntities(nlp(sentence[0]))
-            
-            if len(intersectionNamedEntities) > 0:                
-                for entity in intersectionNamedEntities:
-                    for wordTags in sentenceNamedEntities:
-                        if entity == wordTags[1]:
-                            probableAnswerList.append(wordTags[0])
-                            probableAnswerDocs.append(coreId[0])
-                            probableAnswerSentences.append(sentence[0])
-            '''
             if questionType.intersection(namedEntitiesSet):
                 probableAnswerSentences.append(sentence[0])
                 probableAnswerDocs.append(coreId[0])
@@ -137,28 +125,45 @@ def searchAnswerInSolr(questionEntitiesList, questionType, questionRoot, questio
         if questionRoot == sentenceRoot or questionRootLemma == sentenceRootLemma:
             answerSentences.append(probableAnswerSentences[i])
             answerDocs.append(probableAnswerDocs[i])
+        '''
         else:
             sentencePosWordMap = getPosWordMap(nlp(probableAnswerSentences[i]))
             
             if 'NOUN' in sentencePosWordMap and 'NOUN' in questionPosWordMap and sentencePosWordMap['NOUN'].intersection(questionPosWordMap['NOUN']):
                 answerSentences.append(probableAnswerSentences[i])
                 answerDocs.append(probableAnswerDocs[i])
-            if 'VERB' in sentencePosWordMap and 'VERB' in questionPosWordMap and sentencePosWordMap['VERB'].intersection(questionPosWordMap['VERB']):
+            elif 'VERB' in sentencePosWordMap and 'VERB' in questionPosWordMap and sentencePosWordMap['VERB'].intersection(questionPosWordMap['VERB']):
                 answerSentences.append(probableAnswerSentences[i])
                 answerDocs.append(probableAnswerDocs[i])
-            if 'PROPN' in sentencePosWordMap and 'PROPN' in questionPosWordMap and sentencePosWordMap['VERB'].intersection(questionPosWordMap['VERB']):
-                answerSentences.append(probableAnswerSentences[i])
-                answerDocs.append(probableAnswerDocs[i])
-            if 'PRON' in sentencePosWordMap and 'PRON' in questionPosWordMap and sentencePosWordMap['VERB'].intersection(questionPosWordMap['VERB']):
-                answerSentences.append(probableAnswerSentences[i])
-                answerDocs.append(probableAnswerDocs[i])
-                  
+            
+            #not needed
+            #elif 'PROPN' in sentencePosWordMap and 'PROPN' in questionPosWordMap and sentencePosWordMap['PROPN'].intersection(questionPosWordMap['PROPN']):
+            #    answerSentences.append(probableAnswerSentences[i])
+            #    answerDocs.append(probableAnswerDocs[i])
+            #elif 'PRON' in sentencePosWordMap and 'PRON' in questionPosWordMap and sentencePosWordMap['PRON'].intersection(questionPosWordMap['PRON']):
+            #    answerSentences.append(probableAnswerSentences[i])
+            #    answerDocs.append(probableAnswerDocs[i])
+       '''          
                         
     if len(answerSentences) > 0:
         print(answerSentences)
         print(answerDocs)
     else:
-        print('No answer found!')        
+        #Apply POS method
+        for i in range(len(probableAnswerSentences)):
+            
+            sentencePosWordMap = getPosWordMap(nlp(probableAnswerSentences[i]))
+            
+            if 'NOUN' in sentencePosWordMap and 'NOUN' in questionPosWordMap and sentencePosWordMap['NOUN'].intersection(questionPosWordMap['NOUN']):
+                answerSentences.append(probableAnswerSentences[i])
+                answerDocs.append(probableAnswerDocs[i])
+            elif 'VERB' in sentencePosWordMap and 'VERB' in questionPosWordMap and sentencePosWordMap['VERB'].intersection(questionPosWordMap['VERB']):
+                answerSentences.append(probableAnswerSentences[i])
+                answerDocs.append(probableAnswerDocs[i])
+                
+        print(answerSentences)
+        print(answerDocs)        
+        #print('No answer found!')        
         
     
     
@@ -174,14 +179,14 @@ if __name__ == '__main__':
     #question = "When did Abraham Lincoln die?"
     #question = "Who founded Apple Inc.?"
     #question = "Where is Apple’s headquarters?"
-    #question = "Where did Thomas Lincoln purchase farms?"
+    question = "Where did Thomas Lincoln purchase farms?"
     #question = "Where is the headquarters of AT&T?"
     #question = "When did Steve Jobs die?"
     #question = "Where is Apple’s headquarters?"
     #question = "Who supported Apple in creating a new computing platform?"
     #question = "Where did Thomas Lincoln purchase farms?"
     #question = "Who supported Apple in creating a new computing platform?"
-    question = "Where was Melinda born?"
+    #question = "Where was Melinda born?"
         
     #derive question type
     questionType = questionType(question)

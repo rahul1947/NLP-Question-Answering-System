@@ -12,13 +12,7 @@ import nltk
 import sys
 import os
 import collections
-
-
-'''
-from GenerateTFIDF import computeTF
-from GenerateTFIDF import computeIDF
-from GenerateTFIDF import computeTFIDF
-'''
+import json
 
 
 # Reads data from the given file directed as in filepath, and returns it.
@@ -151,7 +145,6 @@ def getHolonyms(token):
 #function to get root of a sentence
 def getRoot(doc):
     
-    
     dependC, heads = synParsing(doc)
     for i in range(0, len(dependC)):
         if dependC[i] == 'ROOT':
@@ -175,14 +168,17 @@ def getPosWordMap(doc):
             posList.add(word.text)
             posWordMap[word.pos_] = posList
     
-    return posWordMap
+    return posWordMap 
 
-# Task 1 deliverables
-def processAllArticles():
- 
-    nlp = spacy.load("en_core_web_sm")
-    wikipediaArticles = os.listdir("../02-Project-Data/WikipediaArticles/")
+# Function to run the TASK 1 and the generate and print NLP features for a single file (first file) as the Wikipedia Article. 
+# Precondition: 'directory' must constain at-least one wikipedia article. 
+def processFirstArticle(directory, resultDirectory):
+
+    #------------- SCANNING THE RELEVANT FILE -------------
+    wikipediaArticles = os.listdir(directory)
     #print(wikipediaArticles)
+    
+    nlp = spacy.load("en_core_web_sm")
     
     #nltk.download('wordnet')
     nlp.add_pipe(WordnetAnnotator(nlp.lang), after='tagger')
@@ -192,14 +188,144 @@ def processAllArticles():
     namedEntityMap = dict()
     sentenceMap= dict()
     
-    #process all articles and find the respective 
-    for article in wikipediaArticles:
-        filepath = '../02-Project-Data/WikipediaArticles/'+article
-        print('Now Reading File...............',article)        
-        corpus = read_data(filepath)
-        doc = nlp(corpus)
-        tokens = tokennize(doc)                
+    firstArticle = wikipediaArticles[0]
+    filepath = directory + firstArticle
+    
+    print('Now Reading File . . . . . . . ', firstArticle)        
+    
+    corpus = read_data(filepath)
+    doc = nlp(corpus)
 
+    #------------- EXTRACTING NLP FEATURES ----------------
+    lemmasMap = dict()
+    posMap = dict()
+    tagsMap = dict()
+     
+    synsetsMap = dict()
+    hypernymsMap = dict()
+    hyponymsMap = dict()
+
+    partMeronymsMap = dict()
+    substanceMeronymsMap = dict()
+    holonymsMap = dict()
+
+    #1. TOKENIZATION
+    tokens = tokennize(doc)                
+    
+    # For each token in the document, extracting features      
+    for token in doc:
+        
+        lemmasMap[token] = token.lemma_ # 2. Lemmatization
+        posMap[token] = token.pos_ # 3. POS tagging (coarse-grained)
+        tagsMap[token] = token.tag_ # 4. POS tagging (fine-grained)
+                
+        synsetsMap[token] = getSynsets(token) # 5. SynSet of the token
+        hypernymsMap[token] = getHypernyms(token) # 6. Hypernyms
+        hyponymsMap[token] = getHyponyms(token) # 7. Hyponyms
+
+        partMeronymsMap[token] = getPartMeronyms(token) # 8. Part Meronyms
+        substanceMeronymsMap[token] = getSubstanceMeronyms(token) # 9. Substance Meronyms
+        holonymsMap[token] = getHolonyms(token) # 10. Holonyms
+    #endFor
+    
+    # 11. DEPENDENCY labels and 12. SYNTACTIC HEADS for each token in the doc
+    dependCMap[firstArticle], headsMap[firstArticle] = synParsing(doc)
+    
+    # 13. NAMED ENTITIES
+    namedEntityMap[firstArticle] = getNamedEntities(doc)
+
+    # 14. SENTENCE TOKENIZATION
+    sentenceMap[firstArticle] = sentenceTokennize(doc)
+
+    #---------------- WRITING THE FEATURES ----------------
+
+    with open(resultDirectory + 'D01-Tokens.txt', 'w', encoding='utf-8') as f01:
+        json.dump(tokens, f01)
+    
+    f02 =  open(resultDirectory + 'D02-Lemmas.txt', 'w')
+    f02.write(str(lemmasMap))
+    f02.close()
+    
+    f03 =  open(resultDirectory + 'D03-POS.txt', 'w')
+    f03.write(str(posMap))
+    f03.close()
+    
+    f04 =  open(resultDirectory + 'D04-Tags.txt', 'w')
+    f04.write(str(tagsMap))
+    f04.close()
+    
+    f05 = open(resultDirectory + 'D05-Synsets.txt', 'w')
+    f05.write(str(synsetsMap))
+    f05.close()
+    
+    f06 = open(resultDirectory + 'D06-Hypernyms.txt', 'w')
+    f06.write(str(hypernymsMap))
+    f06.close()
+    
+    f07 = open(resultDirectory + 'D07-Hyponyms.txt', 'w')
+    f07.write(str(hyponymsMap))
+    f07.close()
+
+    f08 = open(resultDirectory + 'D08-Meronyms-Part.txt', 'w')
+    f08.write(str(partMeronymsMap))
+    f08.close()
+
+    f09 = open(resultDirectory + 'D09-Meronyms-Substance.txt', 'w')
+    f09.write(str(substanceMeronymsMap))
+    f09.close()
+
+    f10 = open(resultDirectory + 'D10-Holonyms.txt', 'w')
+    f10.write(str(holonymsMap))
+    f10.close()
+
+    f11 = open(resultDirectory + 'D11-Dependencies.txt', 'w')
+    f11.write(str(dependCMap))
+    f11.close()
+
+    f12 = open(resultDirectory + 'D12-Syntactic-Heads.txt', 'w')
+    f12.write(str(headsMap))
+    f12.close()
+
+    f13 = open(resultDirectory + 'D13-Named-Entities.txt', 'w')
+    f13.write(str(namedEntityMap))
+    f13.close()
+
+    f14 = open(resultDirectory + 'D14-Tokenized-Sentences.txt', 'w')
+    f14.write(str(sentenceMap))
+    f14.close()
+    
+    #------------------------------------------------------
+
+
+# Function to run the TASK 1 and the generate NLP features for all the files as Wikipedia Articles. 
+# Precondition: 'directory' must constain at-least one wikipedia article. 
+# Returns the 14 NLP features collected from the Wikipedia Articles.
+def processAllArticles(directory):
+
+    wikipediaArticles = os.listdir(directory)
+    #print(wikipediaArticles)
+    
+    nlp = spacy.load("en_core_web_sm")
+    
+    #nltk.download('wordnet')
+    nlp.add_pipe(WordnetAnnotator(nlp.lang), after='tagger')
+
+    dependCMap = dict()
+    headsMap =  dict()
+    namedEntityMap = dict()
+    sentenceMap= dict()
+    
+    # Process all the articles and find the respective NLP features
+    for article in wikipediaArticles:
+        
+        #--------------- SCANNING THE ARTICLE -----------------
+        filepath = directory + article
+        print('Now Reading File . . . . . . . ', article)        
+        
+        corpus = read_data(filepath)
+        doc = nlp(corpus)               
+
+        #------------- EXTRACTING NLP FEATURES ----------------
         lemmasMap = dict()
         posMap = dict()
         tagsMap = dict()
@@ -207,198 +333,72 @@ def processAllArticles():
         synsetsMap = dict()
         hypernymsMap = dict()
         hyponymsMap = dict()
+
         partMeronymsMap = dict()
         substanceMeronymsMap = dict()
         holonymsMap = dict()
-                     
+        
+        #1. TOKENIZATION
+        tokens = tokennize(doc)
+
         for token in doc:
             #print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_, token.shape_, token.is_alpha, token.is_stop)     
             
-            lemmasMap[token] = token.lemma_
-            posMap[token] = token.pos_
-            tagsMap[token] = token.tag_
+            lemmasMap[token] = token.lemma_ # 2. Lemmatization
+            posMap[token] = token.pos_ # 3. POS tagging (coarse-grained)
+            tagsMap[token] = token.tag_ # 4. POS tagging (fine-grained)
                     
-            synsetsMap[token] = getSynsets(token)
-            hypernymsMap[token] = getHypernyms(token)
-            hyponymsMap[token] = getHyponyms(token)
-            partMeronymsMap[token] = getPartMeronyms(token)
-            substanceMeronymsMap[token] = getSubstanceMeronyms(token)
-            holonymsMap[token] = getHolonyms(token)
-         
-        #print(tokens)    
-        #print(lemmasMap)    
-        #print(posMap)    
-        #print(tagsMap)    
-        #print(synsetsMap)
-        #print(hypernymsMap)
-        #print(hyponymsMap)
-        #print(partMeronymsMap)
-        #print(substanceMeronymsMap)
-        #print(holonymsMap)
+            synsetsMap[token] = getSynsets(token) # 5. SynSet of the token
+            hypernymsMap[token] = getHypernyms(token) # 6. Hypernyms
+            hyponymsMap[token] = getHyponyms(token) # 7. Hyponyms
+
+            partMeronymsMap[token] = getPartMeronyms(token) # 8. Part Meronyms
+            substanceMeronymsMap[token] = getSubstanceMeronyms(token) # 9. Substance Meronyms
+            holonymsMap[token] = getHolonyms(token) # 10. Holonyms
+        #endFor
         
+        # 11. DEPENDENCY labels and 12. SYNTACTIC HEADS for each token in the doc
         dependCMap[article], headsMap[article] = synParsing(doc)
-        #print(dependCMap)
-        #print(headsMap)
         
+        # 13. NAMED ENTITIES
         namedEntityMap[article] = getNamedEntities(doc)
-        #print(namedEntityMap)
-        
+
+        # 14. SENTENCE TOKENIZATION
         sentenceMap[article] = sentenceTokennize(doc)
 
+    # Returning all the 14 NLP features collected FOR EVERY WIKIPEDIA ARTICLE
     return tokens, lemmasMap, posMap, tagsMap, dependCMap, headsMap, namedEntityMap, synsetsMap, hypernymsMap, hyponymsMap, partMeronymsMap, substanceMeronymsMap, holonymsMap, sentenceMap
-    
-
-
-def findTop10CandidateSentences(question, sentences):
-    
-    candidates = collections.Counter()
-    
-    for sentence in sentences:
-        sentenceWords = tokennize(nlp(sentence))
-        wordmatches = set(filter(set(tokennize(nlp(question))).__contains__, sentenceWords))
-        candidates[sentence] = len(wordmatches)
-    return candidates.most_common(10)
-    
-
-def findCandidateSentences(question, sentences):
-    
-    questionTokens = tokennize(nlp(question))
-    candidateSentences = []
-    
-    for questionToken in questionTokens:
-        for sentence in sentences:
-            
-            if questionToken in sentence:
-                    candidateSentences.append(sentence)
-                    
-    return candidateSentences                
-        
-
-def generateTFIDF():
-
-    nlp = spacy.load("en_core_web_sm")
-    wikipediaArticles = os.listdir("../02-Project-Data/WikipediaArticles/")
-    #print(wikipediaArticles)
-
-    wordSets = set()    
-    for article in wikipediaArticles:
-        filepath = '../02-Project-Data/WikipediaArticles/'+article
-        print('Now Reading File...............',article)        
-        corpus = read_data(filepath)
-        doc = nlp(corpus)
-        #print(doc)        
-        tokens = tokennize(doc)                
-        wordSets = wordSets.union(set(tokens))
-
-        
-    # Generatting TF IDF
-    articlesDict = list()
-    articlesTFDict = list()
-    articlesTFIDFDict = list()
-        
-    for article in wikipediaArticles:
-        filepath = '../02-Project-Data/WikipediaArticles/'+article
-        print('Now Processing File...............',article)        
-        corpus = read_data(filepath)
-        doc = nlp(corpus)
-        #print(doc)        
-        tokens = tokennize(doc)
-                        
-        wordDict = dict()
-        TFDict = dict()
-        TFIDFDict = dict()
-        
-        wordDict = dict.fromkeys(wordSets, 0)        
-        for token in tokens:
-            wordDict[token] += 1
-        #print('................',len(wordDict),'...................')
-        
-        #creating list of dictionaries of word counts of every article    
-        articlesDict.append(wordDict)
-        
-        #creating list of dictionaries of TF of every article    
-        TFDict = computeTF(wordDict, tokens)
-        articlesTFDict.append(TFDict)
-        
-        idfs = computeIDF(articlesDict)        
-        
-        TFIDFDict = computeTFIDF(TFDict, idfs)
-        #print("TFIDFDict ",TFIDFDict)
-        print("...................")
-        articlesTFIDFDict.append(TFIDFDict)    
-        
-    return articlesTFIDFDict, wikipediaArticles
-        
-    
-def findBestArticle(articlesTFIDFDict, question, wikipediaArticles):
-    
-    questionTokens = tokennize(nlp(question))
-    questionDict = dict()
-    scoreDict = dict()
-    
-    articleId = 0
-    maxScore = 0
-    for token in questionTokens:
-        print("Checking token ", token)
-        articleId = 0
-        maxScore = -sys.maxsize -1
-        
-        for article in articlesTFIDFDict:
-            if token in article:
-                score = article[token]
-                print(score)
-                print("In article ", articleId, " name ",  wikipediaArticles[articleId], "score ", score, " for token ", token)
-                
-                if score > maxScore:
-                     maxScore = score
-                     scoreDict[token] = articleId
-                articleId += 1
-    #print(scoreDict)     
-    
-    #for score in scoreDict:
-        #print(wikipediaArticles[scoreDict[score]])
-    
+   
         
 # Main function
 if __name__ == '__main__':
 
     nlp = spacy.load("en_core_web_sm")
-    
-    tokens, lemmasMap, posMap, tagsMap, dependCMap, headsMap, namedEntityMap, synsetsMap, hypernymsMap, hyponymsMap, partMeronymsMap, substanceMeronymsMap, holonymsMap, sentenceMap = processAllArticles()    
-    
-    
-    '''
-    #Compute TFIDF and find the best article
-    articlesTFIDFDict, wikipediaArticles = generateTFIDF()
-    bestArticle = findBestArticle(articlesTFIDFDict, question, wikipediaArticles)    
-    print(bestArticle)
-    '''
 
-    '''
-    #Naive way of finding the candidate sentences  
-    #candidateSentences = findTop10CandidateSentences(question, sentences)
-    #print(candidateSentences)
+    # where wikipedia articles resides
+    directory = '../02-Project-Data/WikipediaArticles-Test/'
 
-    #Naive way of finding the candidate sentences
-    print("Head is ", heads)
-    print("NM is ", namedEntityQuestion)
-    print("NM is ", namedEntityQuestion[0][0])
+    # where we intend to store the result (for an article) for demo
+    resultDirectory = '../06-Results/Task-01/'
     
-    candidateSentences = findCandidateSentences(namedEntityQuestion[0][0], sentences)
-    #print(candidateSentences)
+    # UNCOMMENT TO SHOW THE DEMO OF TASK 01. Make sure to remove files from 'resultDirectory'.
+    #processFirstArticle(directory, resultDirectory)
+
+    # Implementation of TASK 01 for all the files in the 'directory'
+    tokens, lemmasMap, posMap, tagsMap, dependCMap, headsMap, namedEntityMap, synsetsMap, hypernymsMap, hyponymsMap, partMeronymsMap, substanceMeronymsMap, holonymsMap, sentenceMap = processAllArticles(directory) 
     
-    done = True
-    for (sentence, matches) in candidateSentences:
-        
-        if questionType(question) == "PERSON":
-            for (text, label) in getNamedEntities(nlp(sentence)):    
-                if "PERSON" == label:
-                    answer = text
-                    print("Found!!! ", answer)
-                    done = True
-                elif done:
-                    break
-    '''    
-                    
+    #print(tokens)    
+    #print(lemmasMap)    
+    #print(posMap)    
+    #print(tagsMap)    
+    #print(synsetsMap)
+    #print(hypernymsMap)
+    #print(hyponymsMap)
+    #print(partMeronymsMap)
+    #print(substanceMeronymsMap)
+    #print(holonymsMap)
+    #print(dependCMap)
+    #print(headsMap)
+    #print(namedEntityMap)              
     
 #The-End
